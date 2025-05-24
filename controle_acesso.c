@@ -1,32 +1,33 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
-#include "lib/display.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#include <stdio.h>
+#include <string.h>
+#include "lib/display.h"
 #include "lib/buttons.h"
 #include "lib/leds_rgb.h"
 #include "lib/buzzer.h"
-#include <stdio.h>
-#include <string.h>
 
 #define MAX_USUARIOS 8 // Número máximo de usuários permitidos
 
-SemaphoreHandle_t xSemaContagem;
-SemaphoreHandle_t xSemaReset;
-SemaphoreHandle_t xMutexDisplay;
+SemaphoreHandle_t xSemaContagem; // Semáforo para contagem de usuários
+SemaphoreHandle_t xSemaReset; // Semáforo para reset do sistema
+SemaphoreHandle_t xMutexDisplay; // Mutex para acesso ao display
 
 uint8_t usuarios = 0;
 
 // Função para atualizar o display com mutex
-void atualizar_display(const char* msg1, const char* msg2) {
-    xSemaphoreTake(xMutexDisplay, portMAX_DELAY);
+void atualizar_display(const char* msg1, const char* msg2) 
+{
+    xSemaphoreTake(xMutexDisplay, portMAX_DELAY); // Aguarda o mutex
     ssd1306_fill(&ssd, 0);
     ssd1306_draw_string(&ssd, msg1, 5, 10);
     ssd1306_draw_string(&ssd, msg2, 5, 45);
     ssd1306_send_data(&ssd);
-    xSemaphoreGive(xMutexDisplay);
+    xSemaphoreGive(xMutexDisplay); // Libera o mutex
 }
 
 // Função para atualizar o LED RGB conforme o estado
@@ -46,10 +47,10 @@ void atualizar_led()
 // Tarefa de entrada
 void vTaskEntrada(void *params) 
 {
-    char buffer[32];
+    char buffer[32]; // Buffer para mensagens
     while (1) {
         if (gpio_get(BOTAO_A) == 0) {
-            vTaskDelay(pdMS_TO_TICKS(30)); // debounce
+            vTaskDelay(pdMS_TO_TICKS(300)); // debounce
             if (gpio_get(BOTAO_A) == 0) {
                 if (usuarios < MAX_USUARIOS) {
                     usuarios++;
@@ -75,7 +76,7 @@ void vTaskSaida(void *params)
     char buffer[32];
     while (1) {
         if (gpio_get(BOTAO_B) == 0) {
-            vTaskDelay(pdMS_TO_TICKS(30)); // debounce
+            vTaskDelay(pdMS_TO_TICKS(300)); // debounce
             if (gpio_get(BOTAO_B) == 0) {
                 if (usuarios > 0) {
                     usuarios--;

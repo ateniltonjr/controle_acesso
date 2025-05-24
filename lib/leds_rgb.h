@@ -21,7 +21,12 @@ void iniciar_leds_rgb()
     gpio_set_dir(blue, GPIO_OUT);
 }
 
-void leds(bool r, bool g, bool b)
+void leds
+(
+    bool r,
+    bool g, 
+    bool b
+)
 {
     gpio_put(red, r);
     gpio_put(green, g);
