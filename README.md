@@ -57,9 +57,10 @@ Este projeto implementa um sistema embarcado de controle de acesso para ambiente
 ## Créditos
 
 Desenvolvido por Atenilton Santos de Souza Júnior
+
 Polo: Bom Jesus da Lapa
-Data: 20/04
-20/05/2025
+
+Data: 20/05/2025
 
 ---
 
