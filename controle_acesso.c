@@ -12,7 +12,7 @@
 #include "lib/buzzer.h"
 
 #define MAX_USUARIOS 8 // Número máximo de usuários permitidos
-#define HISTORICO_TAM 5
+#define HISTORICO_TAM 5 // Tamanho do histórico de eventos
 
 uint8_t usuarios = 0; // Contador de usuários
 
@@ -56,7 +56,8 @@ void atualizar_led()
 }
 
 // Adiciona um evento ao histórico
-void adicionar_historico(const char* evento, uint8_t usuarios) {
+void adicionar_historico(const char* evento, uint8_t usuarios) 
+{
     snprintf(historico[historico_idx].evento, sizeof(historico[historico_idx].evento), "%s", evento); // Copia o nome do evento
     historico[historico_idx].usuarios = usuarios; // Armazena o número de usuários no evento
     historico_idx = (historico_idx + 1) % HISTORICO_TAM; // Circular buffer
@@ -64,7 +65,8 @@ void adicionar_historico(const char* evento, uint8_t usuarios) {
 }
 
 // Exibe o histórico de eventos no display
-void exibir_historico() {
+void exibir_historico() 
+{
     xSemaphoreTake(xMutexDisplay, portMAX_DELAY);
     ssd1306_fill(&ssd, 0);
     int y = 0;
@@ -88,20 +90,18 @@ void vTaskEntrada(void *params)
     while (1) {
         if (gpio_get(BOTAO_A) == 0) {
             vTaskDelay(pdMS_TO_TICKS(300)); // debounce
-            if (gpio_get(BOTAO_A) == 0) {
-                if (usuarios < MAX_USUARIOS) {
-                    usuarios++;
-                    atualizar_led();
-                    sprintf(buffer, "Usuarios: %d", usuarios);
-                    atualizar_display("Entrada OK", buffer);
-                    adicionar_historico("Entrada", usuarios);
-                } else {
-                    atualizar_led();
-                    atualizar_display("Lotado!", "Aguarde...");
-                    beep_curto();
-                }
-                while (gpio_get(BOTAO_A) == 0) vTaskDelay(pdMS_TO_TICKS(10));
+            if (usuarios < MAX_USUARIOS) {
+                usuarios++;
+                atualizar_led();
+                sprintf(buffer, "Usuarios: %d", usuarios);
+                atualizar_display("Entrada OK", buffer);
+                adicionar_historico("Entrada", usuarios);
+            } else {
+                atualizar_led();
+                atualizar_display("Lotado!", "Aguarde...");
+                beep_curto();
             }
+            while (gpio_get(BOTAO_A) == 0) vTaskDelay(pdMS_TO_TICKS(10));
         }
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -114,19 +114,17 @@ void vTaskSaida(void *params)
     while (1) {
         if (gpio_get(BOTAO_B) == 0) {
             vTaskDelay(pdMS_TO_TICKS(300)); // debounce
-            if (gpio_get(BOTAO_B) == 0) {
-                if (usuarios > 0) {
-                    usuarios--;
-                    atualizar_led();
-                    sprintf(buffer, "Usuarios: %d", usuarios);
-                    atualizar_display("Saida OK", buffer);
-                    adicionar_historico("Saida", usuarios);
-                } else {
-                    atualizar_led();
-                    atualizar_display("Nenhum usuario", "para sair");
-                }
-                while (gpio_get(BOTAO_B) == 0) vTaskDelay(pdMS_TO_TICKS(10));
+            if (usuarios > 0) {
+                usuarios--;
+                atualizar_led();
+                sprintf(buffer, "Usuarios: %d", usuarios);
+                atualizar_display("Saida OK", buffer);
+                adicionar_historico("Saida", usuarios);
+            } else {
+                atualizar_led();
+                atualizar_display("Nenhum usuario", "para sair");
             }
+            while (gpio_get(BOTAO_B) == 0) vTaskDelay(pdMS_TO_TICKS(10));
         }
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -159,14 +157,21 @@ void gpio_reset_isr(uint gpio, uint32_t events)
 }
 
 // Botão C para exibir histórico
-void vTaskHistorico(void *params) {
+void vTaskHistorico(void *params) 
+{
+    static int mostrando_historico = 0;
+    char buffer[32];
     while (1) {
         if (gpio_get(BOTAO_C) == 0) {
             vTaskDelay(pdMS_TO_TICKS(30));
-            if (gpio_get(BOTAO_C) == 0) {
+            mostrando_historico = !mostrando_historico;
+            if (mostrando_historico) {
                 exibir_historico();
-                while (gpio_get(BOTAO_C) == 0) vTaskDelay(pdMS_TO_TICKS(10));
+            } else {
+                sprintf(buffer, "Usuarios: %d", usuarios);
+                atualizar_display("Aguardando", buffer);
             }
+            while (gpio_get(BOTAO_C) == 0) vTaskDelay(pdMS_TO_TICKS(10));
         }
         vTaskDelay(pdMS_TO_TICKS(50));
     }
