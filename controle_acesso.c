@@ -11,13 +11,13 @@
 #include "lib/leds_rgb.h"
 #include "lib/buzzer.h"
 
-#define MAX_USUARIOS 8 // Número máximo de usuários permitidos
+#define MAX_USUARIOS 8   // Número máximo de usuários permitidos
 #define HISTORICO_TAM 5 // Tamanho do histórico de eventos
 
 uint8_t usuarios = 0; // Contador de usuários
 
-SemaphoreHandle_t xSemaContagem; // Semáforo para contagem de usuários
-SemaphoreHandle_t xSemaReset; // Semáforo para reset do sistema
+SemaphoreHandle_t xSemaContagem;   // Semáforo para contagem de usuários
+SemaphoreHandle_t xSemaReset;     // Semáforo para reset do sistema
 SemaphoreHandle_t xMutexDisplay; // Mutex para acesso ao display
 
 // Estrutura para histórico de eventos
